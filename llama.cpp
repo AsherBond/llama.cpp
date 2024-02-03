@@ -10393,7 +10393,11 @@ static struct llama_context * llama_new_context_with_model_internal(
             ggml_cgraph * gf = llama_build_graph(*ctx, llama_batch_get_one(&token, n_tokens, n_past, 0));
 
             // initialize scheduler with the worst-case graph
-            ggml_backend_sched_init_measure(ctx->sched, gf);
+            if (!ggml_backend_sched_init_measure(ctx->sched, gf)) {
+                LLAMA_LOG_ERROR("%s: ggml_backend_sched_init_measure() failed\n", __func__);
+                llama_free(ctx);
+                return nullptr;
+            }
             ctx->alloc = ggml_backend_sched_get_tallocr(ctx->sched, ctx->backend_cpu);
 
             for (ggml_backend_t backend : ctx->backends) {
